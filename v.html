@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>فحص الدعوة</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0f0f1a;
+    }
+
+    .card {
+      width: 92%;
+      max-width: 380px;
+      padding: 52px 30px 44px;
+      border-radius: 28px;
+      text-align: center;
+      animation: pop 0.3s cubic-bezier(.34,1.56,.64,1);
+    }
+
+    @keyframes pop {
+      from { opacity: 0; transform: scale(0.88); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .checking { background: #1e88e5; color: #fff; }
+    .allowed  { background: #2ecc71; color: #fff; }
+    .denied   { background: #e74c3c; color: #fff; }
+    .error    { background: #f39c12; color: #fff; }
+
+    .icon   { font-size: 96px; display: block; margin-bottom: 18px; line-height: 1; }
+    .name   { font-size: 34px; font-weight: 700; margin-bottom: 10px; letter-spacing: 0.5px; }
+    .status { font-size: 19px; opacity: 0.92; }
+    .time   { font-size: 14px; margin-top: 14px; opacity: 0.72; }
+  </style>
+</head>
+<body>
+
+  <div id="card" class="card checking">
+    <span class="icon">⏳</span>
+    <div class="name">جاري الفحص...</div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    firebase.initializeApp(firebaseConfig);
+    const db  = firebase.database();
+    const id  = new URLSearchParams(location.search).get('id');
+    const card = document.getElementById('card');
+
+    function show(type, icon, name, status, time) {
+      card.className = 'card ' + type;
+      card.innerHTML =
+        `<span class="icon">${icon}</span>` +
+        `<div class="name">${name}</div>` +
+        `<div class="status">${status}</div>` +
+        (time ? `<div class="time">${time}</div>` : '');
+    }
+
+    if (!id) {
+      show('denied', '❌', 'رمز غير صالح', 'هذه الدعوة غير معروفة');
+    } else {
+      const ref = db.ref('guests/' + id);
+
+      // transaction تمنع أي تكرار حتى لو مسحوا في نفس اللحظة
+      ref.transaction(
+        guest => {
+          if (!guest)       return guest;   // abort: غير موجود
+          if (guest.used)   return;         // abort: مستخدم - لا تغيّر شيء
+          return { ...guest, used: true, usedAt: Date.now() };
+        },
+        (err, committed, snap) => {
+          if (err) {
+            show('error', '⚠️', 'خطأ في الاتصال', 'تحقق من الإنترنت وأعد المحاولة');
+            return;
+          }
+
+          const guest = snap.val();
+
+          if (!guest) {
+            show('denied', '❌', 'دعوة غير موجودة', 'هذا الرمز غير مسجّل');
+            return;
+          }
+
+          if (committed) {
+            // أول مرة تُسجَّل
+            show('allowed', '✅', guest.name, 'أهلاً وسهلاً بك 🌸');
+          } else {
+            // مستخدمة من قبل
+            const t = new Date(guest.usedAt).toLocaleTimeString('ar-SA');
+            show('denied', '🚫', guest.name,
+              'تم استخدام هذه الدعوة مسبقاً',
+              'وقت الدخول: ' + t);
+          }
+        }
+      );
+    }
+  </script>
+</body>
+</html>

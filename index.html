@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إدارة دعوات الزواج</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <style>
+    :root {
+      --gold:    #c9a84c;
+      --brown:   #6b3f1f;
+      --bg:      #fdf8f2;
+      --card:    #ffffff;
+      --border:  #e8d9c0;
+      --text:    #2c2c2c;
+      --green:   #2ecc71;
+      --red:     #e74c3c;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      direction: rtl;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--brown), #a0522d);
+      color: #fff;
+      padding: 22px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    header h1 { font-size: 22px; }
+    header p  { font-size: 12px; opacity: .8; margin-top: 3px; }
+    header a  {
+      color: var(--gold);
+      font-size: 14px;
+      text-decoration: none;
+      border: 1px solid var(--gold);
+      padding: 6px 14px;
+      border-radius: 8px;
+    }
+    header a:hover { background: rgba(201,168,76,.15); }
+
+    .wrap { max-width: 960px; margin: 0 auto; padding: 20px 16px; }
+
+    .box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .box h2 {
+      font-size: 15px;
+      color: var(--brown);
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--gold);
+    }
+
+    label { font-size: 13px; color: #666; display: block; margin-bottom: 5px; }
+    input[type=text], textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: inherit;
+      direction: rtl;
+      background: var(--bg);
+    }
+    textarea { min-height: 130px; resize: vertical; }
+
+    .row { display: flex; gap: 10px; align-items: flex-end; }
+    .row > * { flex: 1; }
+    .row button { flex: 0 0 auto; }
+
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: opacity .2s, transform .1s;
+    }
+    button:hover  { opacity: .88; }
+    button:active { transform: scale(.97); }
+    .btn-primary { background: var(--brown);  color: #fff; }
+    .btn-gold    { background: var(--gold);   color: #fff; }
+    .btn-danger  { background: var(--red);    color: #fff; }
+    .btn-sm      { padding: 6px 13px; font-size: 13px; }
+
+    .hint { font-size: 12px; color: #999; margin-top: 6px; }
+
+    /* Stats */
+    .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .stat  {
+      flex: 1; min-width: 90px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 10px;
+      text-align: center;
+    }
+    .stat .num { font-size: 30px; font-weight: 700; color: var(--brown); }
+    .stat .lbl { font-size: 12px; color: #888; margin-top: 2px; }
+
+    /* Search */
+    #searchInput {
+      margin-bottom: 14px;
+    }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 14px;
+    }
+    .g-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .g-card .g-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 10px;
+      min-height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .g-card img { width: 150px; height: 150px; border-radius: 6px; display: block; margin: 0 auto; }
+    .g-card .badge {
+      display: inline-block;
+      margin: 8px 0;
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .waiting { background: #fff3cd; color: #856404; }
+    .entered { background: #d1e7dd; color: #0a3622; }
+    .g-card .actions { display: flex; gap: 6px; justify-content: center; margin-top: 8px; }
+    .g-card .actions a {
+      display: inline-block;
+      padding: 6px 13px;
+      background: var(--brown);
+      color: #fff;
+      font-size: 13px;
+      border-radius: 7px;
+      text-decoration: none;
+    }
+    .g-card .actions button { padding: 6px 13px; font-size: 13px; }
+
+    .loading { text-align: center; padding: 40px; color: #bbb; font-size: 15px; }
+    .empty   { text-align: center; padding: 40px; color: #bbb; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #2ecc71;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 10px;
+      font-size: 14px;
+      display: none;
+      z-index: 999;
+      white-space: nowrap;
+    }
+
+    /* Progress */
+    #progress {
+      display: none;
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-top: 10px;
+      color: #856404;
+    }
+
+    /* Print */
+    @media print {
+      header, .box:not(.guests-box), #searchInput, .g-card .actions, #toast { display: none !important; }
+      .grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+      .g-card { break-inside: avoid; border: 1px solid #ddd; }
+      body { background: #fff; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🌸 إدارة دعوات الزواج</h1>
+    <p>لوحة تحكم المنظمين — قسم النساء</p>
+  </div>
+  <a href="dashboard.html">📊 لوحة الحضور</a>
+</header>
+
+<div class="wrap">
+
+  <!-- Settings -->
+  <div class="box">
+    <h2>⚙️ إعدادات الرابط</h2>
+    <div class="row">
+      <div>
+        <label>اسم مستخدم GitHub الخاص بك</label>
+        <input type="text" id="githubUser" placeholder="مثال: ayman2026" />
+      </div>
+      <button class="btn-primary" onclick="saveSettings()">حفظ</button>
+    </div>
+    <p class="hint" id="urlPreview">رابط الفحص سيكون: https://اسمك.github.io/wedding-qr/v.html?id=...</p>
+  </div>
+
+  <!-- Add Guests -->
+  <div class="box">
+    <h2>➕ إضافة مدعوات</h2>
+    <label>أدخلي الأسماء — سطر لكل اسم</label>
+    <textarea id="namesInput" placeholder="أسماء محمد&#10;نورة أحمد&#10;سارة علي&#10;..."></textarea>
+    <p class="hint">يمكنك لصق كل الأسماء دفعة واحدة (300 اسم أو أكثر)</p>
+    <div id="progress">⏳ جاري توليد الأكواد...</div>
+    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+      <button class="btn-primary" onclick="generateGuests()">🪄 توليد QR Codes</button>
+      <button class="btn-gold"    onclick="window.print()">🖨️ طباعة الكل</button>
+    </div>
+  </div>
+
+  <!-- Guests -->
+  <div class="box guests-box">
+    <h2>📋 قائمة المدعوات</h2>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="num" id="cTotal">—</div>
+        <div class="lbl">إجمالي</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="cEntered" style="color:var(--green)">—</div>
+        <div class="lbl">دخلت</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="cRemain"  style="color:var(--red)">—</div>
+        <div class="lbl">لم تدخل</div>
+      </div>
+    </div>
+
+    <input type="text" id="searchInput" placeholder="🔍 بحث باسم الضيفة..." oninput="filterCards()" />
+
+    <div id="grid" class="grid">
+      <div class="loading">جاري التحميل...</div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  let allGuests = {}; // { id: { name, used, ... } }
+  let allCards  = []; // [{ id, el }]
+
+  // ── Settings ────────────────────────────────
+  function loadSettings() {
+    const u = localStorage.getItem('ghUser') || '';
+    document.getElementById('githubUser').value = u;
+    updateUrlPreview(u);
+  }
+
+  function saveSettings() {
+    const u = document.getElementById('githubUser').value.trim();
+    localStorage.setItem('ghUser', u);
+    updateUrlPreview(u);
+    toast('تم حفظ الإعدادات ✅');
+  }
+
+  function updateUrlPreview(u) {
+    document.getElementById('urlPreview').textContent =
+      u ? `رابط الفحص: https://${u}.github.io/wedding-qr/v.html?id=...`
+        : 'رابط الفحص سيكون: https://اسمك.github.io/wedding-qr/v.html?id=...';
+  }
+
+  function baseUrl() {
+    const u = localStorage.getItem('ghUser') || '';
+    return u ? `https://${u}.github.io/wedding-qr/v.html` : null;
+  }
+
+  // ── QR Generation ───────────────────────────
+  function makeQR(text) {
+    return new Promise((res, rej) =>
+      QRCode.toDataURL(text, { width: 280, margin: 2 }, (e, url) => e ? rej(e) : res(url))
+    );
+  }
+
+  // ── Add Guests ──────────────────────────────
+  async function generateGuests() {
+    const base = baseUrl();
+    if (!base) { alert('الرجاء حفظ اسم مستخدم GitHub أولاً'); return; }
+
+    const raw = document.getElementById('namesInput').value.trim();
+    if (!raw)  { alert('الرجاء إدخال الأسماء'); return; }
+
+    const names = [...new Set(
+      raw.split('\n').map(n => n.trim()).filter(Boolean)
+    )];
+
+    if (!confirm(`هل تريدين إضافة ${names.length} مدعوة؟`)) return;
+
+    document.getElementById('progress').style.display = 'block';
+
+    const updates = {};
+    const now = Date.now();
+    names.forEach(name => {
+      const id = crypto.randomUUID();
+      updates[`guests/${id}`] = { name, used: false, createdAt: now };
+    });
+
+    await db.ref().update(updates);
+    document.getElementById('namesInput').value = '';
+    document.getElementById('progress').style.display = 'none';
+    toast(`تم إضافة ${names.length} مدعوة بنجاح 🎉`);
+  }
+
+  // ── Render one card ──────────────────────────
+  async function buildCard(id, guest) {
+    const base  = baseUrl() || location.origin + location.pathname.replace('index.html','') + 'v.html';
+    const url   = `${base}?id=${id}`;
+    const qrUrl = await makeQR(url);
+
+    const div = document.createElement('div');
+    div.className = 'g-card';
+    div.dataset.name = guest.name;
+    div.innerHTML = `
+      <div class="g-name">${guest.name}</div>
+      <img src="${qrUrl}" alt="QR" />
+      <div>
+        <span class="badge ${guest.used ? 'entered' : 'waiting'}">
+          ${guest.used ? '✅ دخلت' : '⏳ لم تدخل'}
+        </span>
+      </div>
+      <div class="actions">
+        <a href="${qrUrl}" download="${guest.name}.png">تحميل</a>
+        <button class="btn-danger btn-sm" onclick="deleteGuest('${id}', this)">حذف</button>
+      </div>`;
+    return div;
+  }
+
+  // ── Delete guest ─────────────────────────────
+  async function deleteGuest(id, btn) {
+    if (!confirm('حذف هذه المدعوة؟')) return;
+    await db.ref('guests/' + id).remove();
+    toast('تم الحذف');
+  }
+
+  // ── Load & listen ────────────────────────────
+  function loadGuests() {
+    db.ref('guests').on('value', async snap => {
+      allGuests = snap.val() || {};
+      const entries = Object.entries(allGuests);
+
+      const total   = entries.length;
+      const entered = entries.filter(([,g]) => g.used).length;
+      document.getElementById('cTotal').textContent   = total;
+      document.getElementById('cEntered').textContent = entered;
+      document.getElementById('cRemain').textContent  = total - entered;
+
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      allCards = [];
+
+      if (total === 0) {
+        grid.innerHTML = '<div class="empty">لا توجد مدعوات بعد</div>';
+        return;
+      }
+
+      // Generate QR codes in parallel (batches of 20 for smooth rendering)
+      const batchSize = 20;
+      for (let i = 0; i < entries.length; i += batchSize) {
+        const batch = entries.slice(i, i + batchSize);
+        const cards = await Promise.all(batch.map(([id, g]) => buildCard(id, g)));
+        cards.forEach(el => {
+          grid.appendChild(el);
+          allCards.push({ name: el.dataset.name, el });
+        });
+      }
+    });
+  }
+
+  // ── Search ───────────────────────────────────
+  function filterCards() {
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    allCards.forEach(({ name, el }) => {
+      el.style.display = (!q || name.includes(q)) ? '' : 'none';
+    });
+  }
+
+  // ── Toast ────────────────────────────────────
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.display = 'block';
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => t.style.display = 'none', 3000);
+  }
+
+  // ── Init ─────────────────────────────────────
+  loadSettings();
+  loadGuests();
+</script>
+
+</body>
+</html>

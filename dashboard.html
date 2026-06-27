@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الحضور — الزواج</title>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <style>
+    :root {
+      --gold:   #c9a84c;
+      --brown:  #6b3f1f;
+      --bg:     #fdf8f2;
+      --card:   #ffffff;
+      --border: #e8d9c0;
+      --green:  #2ecc71;
+      --red:    #e74c3c;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+      background: var(--bg);
+      color: #2c2c2c;
+      direction: rtl;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--brown), #a0522d);
+      color: #fff;
+      padding: 22px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    header h1 { font-size: 22px; }
+    header p  { font-size: 12px; opacity: .75; margin-top: 3px; }
+    header a  {
+      color: var(--gold);
+      font-size: 14px;
+      text-decoration: none;
+      border: 1px solid var(--gold);
+      padding: 6px 14px;
+      border-radius: 8px;
+    }
+    header a:hover { background: rgba(201,168,76,.15); }
+
+    .live-dot {
+      display: inline-block;
+      width: 9px; height: 9px;
+      background: var(--green);
+      border-radius: 50%;
+      margin-left: 6px;
+      animation: blink 1.4s infinite;
+    }
+    @keyframes blink {
+      0%,100% { opacity: 1; } 50% { opacity: .2; }
+    }
+
+    .wrap { max-width: 860px; margin: 0 auto; padding: 20px 16px; }
+
+    /* Stats */
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px; }
+    .stat  {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 14px;
+      text-align: center;
+    }
+    .stat .num { font-size: 48px; font-weight: 700; line-height: 1; }
+    .stat .lbl { font-size: 13px; color: #888; margin-top: 6px; }
+    .c-total   { color: var(--brown); }
+    .c-entered { color: var(--green); }
+    .c-remain  { color: var(--red);   }
+
+    /* Progress bar */
+    .prog-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 22px;
+    }
+    .prog-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .prog-bar {
+      height: 14px;
+      background: #eee;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--green), #27ae60);
+      border-radius: 10px;
+      transition: width .6s ease;
+      width: 0%;
+    }
+
+    /* Table */
+    .box {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .box-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .box-header h2 { font-size: 15px; color: var(--brown); }
+
+    input[type=text] {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: inherit;
+      direction: rtl;
+      background: var(--bg);
+      width: 200px;
+    }
+
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      background: var(--bg);
+      padding: 10px 16px;
+      font-size: 13px;
+      color: #888;
+      font-weight: 600;
+      text-align: right;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 11px 16px;
+      font-size: 14px;
+      border-bottom: 1px solid #f3ebe0;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #fdf3e3; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .b-entered { background: #d1e7dd; color: #0a3622; }
+    .b-waiting { background: #fff3cd; color: #856404; }
+
+    .time { font-size: 12px; color: #aaa; }
+    .empty { text-align: center; padding: 40px; color: #bbb; }
+
+    @media (max-width: 500px) {
+      .stats { grid-template-columns: repeat(3, 1fr); }
+      .stat .num { font-size: 32px; }
+      input[type=text] { width: 140px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📊 لوحة الحضور <span class="live-dot"></span></h1>
+    <p>تحديث فوري — قسم النساء</p>
+  </div>
+  <a href="index.html">⚙️ الإدارة</a>
+</header>
+
+<div class="wrap">
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="num c-total"   id="cTotal">—</div>
+      <div class="lbl">إجمالي المدعوات</div>
+    </div>
+    <div class="stat">
+      <div class="num c-entered" id="cEntered">—</div>
+      <div class="lbl">حضرن ✅</div>
+    </div>
+    <div class="stat">
+      <div class="num c-remain"  id="cRemain">—</div>
+      <div class="lbl">لم يحضرن</div>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="prog-wrap">
+    <div class="prog-label">
+      <span>نسبة الحضور</span>
+      <span id="pct">0%</span>
+    </div>
+    <div class="prog-bar">
+      <div class="prog-fill" id="progFill"></div>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="box">
+    <div class="box-header">
+      <h2>قائمة المدعوات</h2>
+      <input type="text" id="search" placeholder="🔍 بحث..." oninput="filterRows()" />
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>الاسم</th>
+          <th>الحالة</th>
+          <th>وقت الدخول</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr><td colspan="4" class="empty">جاري التحميل...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  let rows = []; // { name, used, usedAt, el }
+
+  db.ref('guests').on('value', snap => {
+    const guests  = snap.val() || {};
+    const entries = Object.entries(guests);
+
+    const total   = entries.length;
+    const entered = entries.filter(([,g]) => g.used).length;
+    const pct     = total ? Math.round(entered / total * 100) : 0;
+
+    document.getElementById('cTotal').textContent   = total;
+    document.getElementById('cEntered').textContent = entered;
+    document.getElementById('cRemain').textContent  = total - entered;
+    document.getElementById('pct').textContent      = pct + '%';
+    document.getElementById('progFill').style.width = pct + '%';
+
+    const tbody = document.getElementById('tbody');
+    tbody.innerHTML = '';
+    rows = [];
+
+    if (total === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty">لا توجد مدعوات بعد</td></tr>';
+      return;
+    }
+
+    // Sort: entered first (by time desc), then waiting (by name)
+    entries.sort(([,a], [,b]) => {
+      if (a.used && !b.used) return -1;
+      if (!a.used && b.used) return 1;
+      if (a.used && b.used) return (b.usedAt || 0) - (a.usedAt || 0);
+      return a.name.localeCompare(b.name, 'ar');
+    });
+
+    entries.forEach(([, guest], i) => {
+      const tr = document.createElement('tr');
+      const timeStr = guest.usedAt
+        ? new Date(guest.usedAt).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })
+        : '—';
+
+      tr.innerHTML = `
+        <td class="time">${i + 1}</td>
+        <td><strong>${guest.name}</strong></td>
+        <td>
+          <span class="badge ${guest.used ? 'b-entered' : 'b-waiting'}">
+            ${guest.used ? '✅ حضرت' : '⏳ لم تحضر'}
+          </span>
+        </td>
+        <td class="time">${timeStr}</td>`;
+
+      tbody.appendChild(tr);
+      rows.push({ name: guest.name.toLowerCase(), el: tr });
+    });
+
+    // Re-apply search filter after data refresh
+    filterRows();
+  });
+
+  function filterRows() {
+    const q = document.getElementById('search').value.trim().toLowerCase();
+    rows.forEach(({ name, el }) => {
+      el.style.display = (!q || name.includes(q)) ? '' : 'none';
+    });
+  }
+</script>
+
+</body>
+</html>
