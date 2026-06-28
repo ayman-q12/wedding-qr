@@ -342,9 +342,9 @@
   }
 
   // ── Template ────────────────────────────────────────────────────────────────
-  let tplMode = null;
-  let tplPos  = JSON.parse(localStorage.getItem('tplPos') || '{}');
-  // tplPos = { qr: {xPct,yPct,sizePct}, name: {xPct,yPct} }
+  let tplMode        = null;
+  let tplPos         = {};
+  let tplImageDataUrl = null; // المتغير المركزي للقالب
 
   function loadTemplate() {
     const file = document.getElementById('templateFile').files[0];
@@ -352,12 +352,9 @@
     if (file.size > 3 * 1024 * 1024) { alert('الصورة كبيرة جداً — الرجاء استخدام صورة أقل من 3MB'); return; }
     const reader = new FileReader();
     reader.onload = async e => {
-      const dataUrl = e.target.result;
-      localStorage.setItem('tplImage', dataUrl);
-      showTemplateEditor(dataUrl);
-      // حفظ في Firebase للمزامنة بين الأجهزة
       toast('⏳ جاري رفع القالب...');
-      await db.ref('config/tplImage').set(dataUrl);
+      // الحفظ في Firebase يطلق listener تلقائياً → يحدّث كل الأجهزة
+      await db.ref('config/tplImage').set(e.target.result);
       toast('✅ تم رفع القالب — يظهر على جميع الأجهزة');
     };
     reader.readAsDataURL(file);
@@ -491,22 +488,23 @@
 
   async function clearTemplate() {
     if (!confirm('حذف القالب من جميع الأجهزة؟')) return;
-    localStorage.removeItem('tplImage');
-    localStorage.removeItem('tplPos');
-    tplPos = {};
-    await db.ref('config/tplImage').remove();
-    await db.ref('config/tplPos').remove();
-    document.getElementById('templateEditor').style.display = 'none';
-    document.getElementById('templateFile').value = '';
+    // الحذف من Firebase يطلق listener → يخفي القالب على كل الأجهزة
+    await Promise.all([
+      db.ref('config/tplImage').remove(),
+      db.ref('config/tplPos').remove()
+    ]);
     toast('تم حذف القالب');
   }
 
   async function previewCard() {
-    const tplDataUrl = localStorage.getItem('tplImage');
-    if (!tplDataUrl || !tplPos.qr) { alert('حدّدي موضع QR أولاً'); return; }
-    const dummyQR = await makeQR('https://example.com/test');
-    const composite = await buildComposite(tplDataUrl, dummyQR, 'أم سارة — معاينة', 4);
-    window.open(composite);
+    if (!tplImageDataUrl || !tplPos.qr) { alert('حدّدي موضع QR أولاً'); return; }
+    const dummyQR   = await makeQR('https://example.com/test');
+    const composite = await buildComposite(tplImageDataUrl, dummyQR, 'أم سارة — معاينة', 4);
+    const modal = document.getElementById('previewModal');
+    const img   = document.getElementById('previewImg');
+    const dl    = document.getElementById('previewDl');
+    img.src = composite; dl.href = composite;
+    modal.style.display = 'block';
   }
 
   // ── Build composite image ────────────────────────────────────────────────
@@ -597,7 +595,7 @@
     const name  = guest.name  || '(بدون اسم)';
 
     const qrUrl    = await makeQR(url);
-    const tplImage = localStorage.getItem('tplImage');
+    const tplImage = tplImageDataUrl;
     const imgUrl   = tplImage ? await buildComposite(tplImage, qrUrl, name, count) : qrUrl;
 
     const div = document.createElement('div');
@@ -675,35 +673,38 @@
   loadSettings();
   loadGuests();
 
-  // Restore template: localStorage أولاً، ثم Firebase إذا ما في شيء
-  async function initTemplate() {
-    let dataUrl = localStorage.getItem('tplImage');
-    let pos     = JSON.parse(localStorage.getItem('tplPos') || '{}');
-
-    if (!dataUrl) {
-      // جرب تحميل من Firebase
-      const [imgSnap, posSnap] = await Promise.all([
-        db.ref('config/tplImage').once('value'),
-        db.ref('config/tplPos').once('value')
-      ]);
-      dataUrl = imgSnap.val();
-      const remotePos = posSnap.val();
-      if (dataUrl) localStorage.setItem('tplImage', dataUrl);
-      if (remotePos) { pos = remotePos; localStorage.setItem('tplPos', JSON.stringify(pos)); }
+  // مزامنة القالب بـ real-time listener — يعمل تلقائياً على كل الأجهزة
+  db.ref('config/tplImage').on('value', snap => {
+    const val = snap.val();
+    tplImageDataUrl = val || null;
+    if (val) {
+      // أظهر المحرر فقط إذا تغيّرت الصورة
+      const canvas = document.getElementById('templateCanvas');
+      if (canvas._dataUrl !== val) showTemplateEditor(val);
+    } else {
+      // تم حذف القالب من جهاز آخر
+      tplImageDataUrl = null;
+      document.getElementById('templateEditor').style.display = 'none';
+      document.getElementById('templateFile').value = '';
     }
+  });
 
-    if (dataUrl) {
-      tplPos = pos;
-      showTemplateEditor(dataUrl);
+  db.ref('config/tplPos').on('value', snap => {
+    const val = snap.val();
+    if (val) {
+      tplPos = val;
+      if (!tplMode) { // لا تعدّل أثناء تحديد الموضع
+        if (val.qr) {
+          document.getElementById('qrSizeSlider').value    = val.qr.sizePct;
+          document.getElementById('qrSizeVal').textContent = val.qr.sizePct;
+        }
+        updatePosInfo();
+        redrawTpl();
+      }
+    } else {
+      tplPos = {};
     }
-
-    if (tplPos.qr) {
-      document.getElementById('qrSizeSlider').value    = tplPos.qr.sizePct;
-      document.getElementById('qrSizeVal').textContent = tplPos.qr.sizePct;
-    }
-  }
-
-  initTemplate();
+  });
 </script>
 
 </body>
