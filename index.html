@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>إدارة دعوات الزواج</title>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
   <script src="firebase-config.js"></script>
@@ -308,9 +308,18 @@
 
   // ── QR Generation ───────────────────────────
   function makeQR(text) {
-    return new Promise((res, rej) =>
-      QRCode.toDataURL(text, { width: 280, margin: 2 }, (e, url) => e ? rej(e) : res(url))
-    );
+    return new Promise((resolve) => {
+      const div = document.createElement('div');
+      div.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+      document.body.appendChild(div);
+      new QRCode(div, { text, width: 280, height: 280, correctLevel: QRCode.CorrectLevel.H });
+      setTimeout(() => {
+        const canvas = div.querySelector('canvas');
+        const dataUrl = canvas ? canvas.toDataURL('image/png') : '';
+        document.body.removeChild(div);
+        resolve(dataUrl);
+      }, 50);
+    });
   }
 
   // ── Add Guests ──────────────────────────────
