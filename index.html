@@ -268,10 +268,16 @@
   function loadTemplate() {
     const file = document.getElementById('templateFile').files[0];
     if (!file) return;
+    if (file.size > 3 * 1024 * 1024) { alert('الصورة كبيرة جداً — الرجاء استخدام صورة أقل من 3MB'); return; }
     const reader = new FileReader();
-    reader.onload = e => {
-      localStorage.setItem('tplImage', e.target.result);
-      showTemplateEditor(e.target.result);
+    reader.onload = async e => {
+      const dataUrl = e.target.result;
+      localStorage.setItem('tplImage', dataUrl);
+      showTemplateEditor(dataUrl);
+      // حفظ في Firebase للمزامنة بين الأجهزة
+      toast('⏳ جاري رفع القالب...');
+      await db.ref('config/tplImage').set(dataUrl);
+      toast('✅ تم رفع القالب — يظهر على جميع الأجهزة');
     };
     reader.readAsDataURL(file);
   }
@@ -368,7 +374,7 @@
       tplPos.name = { xPct, yPct };
     }
 
-    localStorage.setItem('tplPos', JSON.stringify(tplPos));
+    saveTplPos();
     updatePosInfo();
     redrawTpl();
     tplMode = null;
@@ -383,9 +389,14 @@
     document.getElementById('qrSizeVal').textContent = val;
     if (tplPos.qr) {
       tplPos.qr.sizePct = parseInt(val);
-      localStorage.setItem('tplPos', JSON.stringify(tplPos));
+      saveTplPos();
       redrawTpl();
     }
+  }
+
+  function saveTplPos() {
+    localStorage.setItem('tplPos', JSON.stringify(tplPos));
+    db.ref('config/tplPos').set(tplPos); // مزامنة Firebase
   }
 
   function updatePosInfo() {
@@ -397,12 +408,16 @@
       : 'انقر على الصورة';
   }
 
-  function clearTemplate() {
+  async function clearTemplate() {
+    if (!confirm('حذف القالب من جميع الأجهزة؟')) return;
     localStorage.removeItem('tplImage');
     localStorage.removeItem('tplPos');
     tplPos = {};
+    await db.ref('config/tplImage').remove();
+    await db.ref('config/tplPos').remove();
     document.getElementById('templateEditor').style.display = 'none';
     document.getElementById('templateFile').value = '';
+    toast('تم حذف القالب');
   }
 
   async function previewCard() {
@@ -578,13 +593,35 @@
   loadSettings();
   loadGuests();
 
-  // Restore template if saved
-  const savedTpl = localStorage.getItem('tplImage');
-  if (savedTpl) showTemplateEditor(savedTpl);
-  if (tplPos.qr) {
-    document.getElementById('qrSizeSlider').value    = tplPos.qr.sizePct;
-    document.getElementById('qrSizeVal').textContent = tplPos.qr.sizePct;
+  // Restore template: localStorage أولاً، ثم Firebase إذا ما في شيء
+  async function initTemplate() {
+    let dataUrl = localStorage.getItem('tplImage');
+    let pos     = JSON.parse(localStorage.getItem('tplPos') || '{}');
+
+    if (!dataUrl) {
+      // جرب تحميل من Firebase
+      const [imgSnap, posSnap] = await Promise.all([
+        db.ref('config/tplImage').once('value'),
+        db.ref('config/tplPos').once('value')
+      ]);
+      dataUrl = imgSnap.val();
+      const remotePos = posSnap.val();
+      if (dataUrl) localStorage.setItem('tplImage', dataUrl);
+      if (remotePos) { pos = remotePos; localStorage.setItem('tplPos', JSON.stringify(pos)); }
+    }
+
+    if (dataUrl) {
+      tplPos = pos;
+      showTemplateEditor(dataUrl);
+    }
+
+    if (tplPos.qr) {
+      document.getElementById('qrSizeSlider').value    = tplPos.qr.sizePct;
+      document.getElementById('qrSizeVal').textContent = tplPos.qr.sizePct;
+    }
   }
+
+  initTemplate();
 </script>
 
 </body>
