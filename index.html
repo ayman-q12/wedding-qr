@@ -693,40 +693,61 @@
   // ── Init ──────────────────────────────────────────────────────────────────
   initAuth();
   loadSettings();
-  loadGuests();
 
-  // مزامنة القالب بـ real-time listener — يعمل تلقائياً على كل الأجهزة
-  db.ref('config/tplImage').on('value', snap => {
-    const val = snap.val();
-    tplImageDataUrl = val || null;
-    if (val) {
-      // أظهر المحرر فقط إذا تغيّرت الصورة
-      const canvas = document.getElementById('templateCanvas');
-      if (canvas._dataUrl !== val) showTemplateEditor(val);
-    } else {
-      // تم حذف القالب من جهاز آخر
-      tplImageDataUrl = null;
-      document.getElementById('templateEditor').style.display = 'none';
-      document.getElementById('templateFile').value = '';
-    }
-  });
+  async function init() {
+    // ① جلب القالب والمواضع أولاً قبل بناء الكروت
+    const [imgSnap, posSnap] = await Promise.all([
+      db.ref('config/tplImage').once('value'),
+      db.ref('config/tplPos').once('value')
+    ]);
+    tplImageDataUrl = imgSnap.val() || null;
+    const remotePos = posSnap.val();
+    if (remotePos) tplPos = remotePos;
 
-  db.ref('config/tplPos').on('value', snap => {
-    const val = snap.val();
-    if (val) {
-      tplPos = val;
-      if (!tplMode) { // لا تعدّل أثناء تحديد الموضع
-        if (val.qr) {
-          document.getElementById('qrSizeSlider').value    = val.qr.sizePct;
-          document.getElementById('qrSizeVal').textContent = val.qr.sizePct;
-        }
-        updatePosInfo();
-        redrawTpl();
+    if (tplImageDataUrl) {
+      showTemplateEditor(tplImageDataUrl);
+      if (tplPos.qr) {
+        document.getElementById('qrSizeSlider').value    = tplPos.qr.sizePct;
+        document.getElementById('qrSizeVal').textContent = tplPos.qr.sizePct;
       }
-    } else {
-      tplPos = {};
+      updatePosInfo();
     }
-  });
+
+    // ② ابنِ الكروت — القالب جاهز الآن
+    loadGuests();
+
+    // ③ listeners للتحديثات المستقبلية
+    db.ref('config/tplImage').on('value', snap => {
+      const val = snap.val();
+      tplImageDataUrl = val || null;
+      if (val) {
+        const canvas = document.getElementById('templateCanvas');
+        if (canvas._dataUrl !== val) showTemplateEditor(val);
+      } else {
+        document.getElementById('templateEditor').style.display = 'none';
+        document.getElementById('templateFile').value = '';
+      }
+    });
+
+    db.ref('config/tplPos').on('value', snap => {
+      const val = snap.val();
+      if (val) {
+        tplPos = val;
+        if (!tplMode) {
+          if (val.qr) {
+            document.getElementById('qrSizeSlider').value    = val.qr.sizePct;
+            document.getElementById('qrSizeVal').textContent = val.qr.sizePct;
+          }
+          updatePosInfo();
+          redrawTpl();
+        }
+      } else {
+        tplPos = {};
+      }
+    });
+  }
+
+  init();
 </script>
 
 </body>
