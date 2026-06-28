@@ -10,199 +10,108 @@
   <script src="firebase-config.js"></script>
   <style>
     :root {
-      --gold:    #c9a84c;
-      --brown:   #6b3f1f;
-      --bg:      #fdf8f2;
-      --card:    #ffffff;
-      --border:  #e8d9c0;
-      --text:    #2c2c2c;
-      --green:   #2ecc71;
-      --red:     #e74c3c;
+      --gold:   #c9a84c;
+      --brown:  #6b3f1f;
+      --bg:     #fdf8f2;
+      --card:   #ffffff;
+      --border: #e8d9c0;
+      --text:   #2c2c2c;
+      --green:  #2ecc71;
+      --red:    #e74c3c;
+      --pink:   #c06080;
     }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      direction: rtl;
-    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Segoe UI',Tahoma,Arial,sans-serif; background:var(--bg); color:var(--text); direction:rtl; }
 
     header {
-      background: linear-gradient(135deg, var(--brown), #a0522d);
-      color: #fff;
-      padding: 22px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 10px;
+      background: linear-gradient(135deg,var(--brown),#a0522d);
+      color:#fff; padding:22px 24px;
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
     }
-    header h1 { font-size: 22px; }
-    header p  { font-size: 12px; opacity: .8; margin-top: 3px; }
-    header a  {
-      color: var(--gold);
-      font-size: 14px;
-      text-decoration: none;
-      border: 1px solid var(--gold);
-      padding: 6px 14px;
-      border-radius: 8px;
-    }
-    header a:hover { background: rgba(201,168,76,.15); }
+    header h1 { font-size:22px; }
+    header p  { font-size:12px; opacity:.8; margin-top:3px; }
+    header a  { color:var(--gold); font-size:14px; text-decoration:none; border:1px solid var(--gold); padding:6px 14px; border-radius:8px; }
+    header a:hover { background:rgba(201,168,76,.15); }
 
-    .wrap { max-width: 960px; margin: 0 auto; padding: 20px 16px; }
+    .wrap { max-width:960px; margin:0 auto; padding:20px 16px; }
 
-    .box {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    .box h2 {
-      font-size: 15px;
-      color: var(--brown);
-      margin-bottom: 14px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--gold);
-    }
+    .box { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:20px; }
+    .box h2 { font-size:15px; color:var(--brown); margin-bottom:14px; padding-bottom:8px; border-bottom:2px solid var(--gold); }
 
-    label { font-size: 13px; color: #666; display: block; margin-bottom: 5px; }
-    input[type=text], textarea {
-      width: 100%;
-      padding: 10px 14px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 15px;
-      font-family: inherit;
-      direction: rtl;
-      background: var(--bg);
+    label { font-size:13px; color:#666; display:block; margin-bottom:5px; }
+    input[type=text], input[type=number], textarea {
+      width:100%; padding:10px 14px; border:1px solid var(--border);
+      border-radius:8px; font-size:15px; font-family:inherit; direction:rtl; background:var(--bg);
     }
-    textarea { min-height: 130px; resize: vertical; }
+    input[type=range] { width:100%; accent-color:var(--brown); }
+    textarea { min-height:130px; resize:vertical; }
 
-    .row { display: flex; gap: 10px; align-items: flex-end; }
-    .row > * { flex: 1; }
-    .row button { flex: 0 0 auto; }
+    .row { display:flex; gap:10px; align-items:flex-end; }
+    .row > * { flex:1; }
+    .row button { flex:0 0 auto; }
 
     button {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-family: inherit;
-      cursor: pointer;
-      transition: opacity .2s, transform .1s;
+      padding:10px 20px; border:none; border-radius:8px; font-size:14px;
+      font-family:inherit; cursor:pointer; transition:opacity .2s, transform .1s;
     }
-    button:hover  { opacity: .88; }
-    button:active { transform: scale(.97); }
-    .btn-primary { background: var(--brown);  color: #fff; }
-    .btn-gold    { background: var(--gold);   color: #fff; }
-    .btn-danger  { background: var(--red);    color: #fff; }
-    .btn-sm      { padding: 6px 13px; font-size: 13px; }
+    button:hover  { opacity:.88; }
+    button:active { transform:scale(.97); }
+    .btn-primary { background:var(--brown); color:#fff; }
+    .btn-gold    { background:var(--gold);  color:#fff; }
+    .btn-danger  { background:var(--red);   color:#fff; }
+    .btn-pink    { background:var(--pink);  color:#fff; }
+    .btn-sm      { padding:6px 13px; font-size:13px; }
 
-    .hint { font-size: 12px; color: #999; margin-top: 6px; }
+    .hint { font-size:12px; color:#999; margin-top:6px; }
+
+    /* Template editor */
+    .tpl-toolbar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+    .tpl-mode-btn { padding:8px 14px; font-size:13px; border:2px solid transparent; }
+    .tpl-mode-btn.active { border-color:var(--pink); background:rgba(192,96,128,.1); }
+    #templateCanvas { max-width:100%; border-radius:8px; border:1px solid var(--border); display:block; cursor:default; }
+    .tpl-info { display:flex; gap:16px; font-size:12px; color:#888; margin-top:8px; flex-wrap:wrap; }
+    .tpl-info span b { color:var(--brown); }
+    .size-row { display:flex; align-items:center; gap:10px; margin-top:10px; }
+    .size-row label { margin:0; white-space:nowrap; }
 
     /* Stats */
-    .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-    .stat  {
-      flex: 1; min-width: 90px;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 10px;
-      text-align: center;
-    }
-    .stat .num { font-size: 30px; font-weight: 700; color: var(--brown); }
-    .stat .lbl { font-size: 12px; color: #888; margin-top: 2px; }
-
-    /* Search */
-    #searchInput {
-      margin-bottom: 14px;
-    }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+    .stat  { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px 10px; text-align:center; }
+    .stat .num { font-size:28px; font-weight:700; color:var(--brown); }
+    .stat .lbl { font-size:11px; color:#888; margin-top:2px; }
 
     /* Grid */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-      gap: 14px;
-    }
-    .g-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 14px;
-      text-align: center;
-    }
-    .g-card .g-name {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 10px;
-      min-height: 38px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .g-card img { width: 150px; height: 150px; border-radius: 6px; display: block; margin: 0 auto; }
-    .g-card .badge {
-      display: inline-block;
-      margin: 8px 0;
-      padding: 3px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .waiting { background: #fff3cd; color: #856404; }
-    .entered { background: #d1e7dd; color: #0a3622; }
-    .g-card .actions { display: flex; gap: 6px; justify-content: center; margin-top: 8px; }
-    .g-card .actions a {
-      display: inline-block;
-      padding: 6px 13px;
-      background: var(--brown);
-      color: #fff;
-      font-size: 13px;
-      border-radius: 7px;
-      text-decoration: none;
-    }
-    .g-card .actions button { padding: 6px 13px; font-size: 13px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(195px,1fr)); gap:14px; }
+    .g-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; text-align:center; }
+    .g-card .g-name { font-size:14px; font-weight:600; margin-bottom:4px; min-height:20px; }
+    .g-card .g-count { font-size:12px; color:#888; margin-bottom:8px; }
+    .g-card img { width:100%; border-radius:6px; display:block; }
+    .g-card .badge { display:inline-block; margin:8px 0; padding:3px 12px; border-radius:20px; font-size:12px; font-weight:600; }
+    .waiting { background:#fff3cd; color:#856404; }
+    .entered { background:#d1e7dd; color:#0a3622; }
+    .g-card .actions { display:flex; gap:6px; justify-content:center; margin-top:8px; }
+    .g-card .actions a { display:inline-block; padding:6px 13px; background:var(--brown); color:#fff; font-size:13px; border-radius:7px; text-decoration:none; }
+    .g-card .actions button { padding:6px 13px; font-size:13px; }
 
-    .loading { text-align: center; padding: 40px; color: #bbb; font-size: 15px; }
-    .empty   { text-align: center; padding: 40px; color: #bbb; }
+    .loading { text-align:center; padding:40px; color:#bbb; font-size:15px; }
+    .empty   { text-align:center; padding:40px; color:#bbb; }
 
-    /* Toast */
     #toast {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #2ecc71;
-      color: #fff;
-      padding: 12px 24px;
-      border-radius: 10px;
-      font-size: 14px;
-      display: none;
-      z-index: 999;
-      white-space: nowrap;
+      position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+      background:#2ecc71; color:#fff; padding:12px 24px; border-radius:10px;
+      font-size:14px; display:none; z-index:999; white-space:nowrap;
     }
+    #progress { display:none; background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:10px 14px; font-size:13px; margin-top:10px; color:#856404; }
 
-    /* Progress */
-    #progress {
-      display: none;
-      background: #fff3cd;
-      border: 1px solid #ffc107;
-      border-radius: 8px;
-      padding: 10px 14px;
-      font-size: 13px;
-      margin-top: 10px;
-      color: #856404;
-    }
-
-    /* Print */
     @media print {
-      header, .box:not(.guests-box), #searchInput, .g-card .actions, #toast { display: none !important; }
-      .grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }
-      .g-card { break-inside: avoid; border: 1px solid #ddd; }
-      body { background: #fff; }
+      header, .box:not(.guests-box), #searchInput, .g-card .actions, #toast { display:none !important; }
+      .grid { grid-template-columns:repeat(3,1fr); gap:8px; }
+      .g-card { break-inside:avoid; }
+      body { background:#fff; }
+    }
+    @media (max-width:500px) {
+      .stats { grid-template-columns:repeat(2,1fr); }
+      .stat .num { font-size:22px; }
     }
   </style>
 </head>
@@ -224,11 +133,42 @@
     <div class="row">
       <div>
         <label>اسم مستخدم GitHub الخاص بك</label>
-        <input type="text" id="githubUser" placeholder="مثال: ayman2026" />
+        <input type="text" id="githubUser" placeholder="مثال: ayman-q12" />
       </div>
       <button class="btn-primary" onclick="saveSettings()">حفظ</button>
     </div>
     <p class="hint" id="urlPreview">رابط الفحص سيكون: https://اسمك.github.io/wedding-qr/v.html?id=...</p>
+  </div>
+
+  <!-- Template -->
+  <div class="box">
+    <h2>🎨 قالب البطاقة (اختياري)</h2>
+
+    <label>رفع صورة القالب PNG</label>
+    <input type="file" id="templateFile" accept="image/png,image/jpeg" onchange="loadTemplate()" style="margin-bottom:12px" />
+
+    <div id="templateEditor" style="display:none">
+      <div class="tpl-toolbar">
+        <button class="btn-pink btn-sm tpl-mode-btn" id="btnModeQR"   onclick="setMode('qr')">📦 تحديد موضع QR</button>
+        <button class="btn-pink btn-sm tpl-mode-btn" id="btnModeName" onclick="setMode('name')">✏️ تحديد موضع الاسم</button>
+        <button class="btn-gold btn-sm"              onclick="previewCard()">👁️ معاينة</button>
+        <button class="btn-danger btn-sm"            onclick="clearTemplate()">🗑️ حذف القالب</button>
+      </div>
+
+      <p id="modeHint" style="font-size:13px;color:var(--pink);min-height:20px;margin-bottom:8px"></p>
+
+      <canvas id="templateCanvas"></canvas>
+
+      <div class="tpl-info">
+        <span>📦 QR: <b id="qrPosInfo">انقر على الصورة</b></span>
+        <span>✏️ الاسم: <b id="namePosInfo">انقر على الصورة</b></span>
+      </div>
+
+      <div class="size-row">
+        <label>حجم QR: <b id="qrSizeVal">60</b>%</label>
+        <input type="range" id="qrSizeSlider" min="15" max="90" value="60" oninput="updateQrSize()" />
+      </div>
+    </div>
   </div>
 
   <!-- Add Guests -->
@@ -236,9 +176,9 @@
     <h2>➕ إضافة مدعوات</h2>
     <label>أدخلي الأسماء وعدد الأشخاص — سطر لكل بطاقة</label>
     <textarea id="namesInput" placeholder="أم سارة | 4&#10;نورة أحمد | 2&#10;سارة علي | 1&#10;&#10;(اكتبي الاسم ثم | ثم عدد الأشخاص)&#10;(إذا ما كتبتِ العدد يُحسب شخص واحد)"></textarea>
-    <p class="hint">مثال: &nbsp; أم سارة | 4 &nbsp;←&nbsp; تدخل هي و3 بناتها بنفس الكود</p>
+    <p class="hint">مثال: &nbsp;أم سارة | 4&nbsp; ← تدخل هي و3 بناتها بنفس الكود</p>
     <div id="progress">⏳ جاري توليد الأكواد...</div>
-    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn-primary" onclick="generateGuests()">🪄 توليد QR Codes</button>
       <button class="btn-gold"    onclick="window.print()">🖨️ طباعة الكل</button>
     </div>
@@ -249,25 +189,13 @@
     <h2>📋 قائمة المدعوات</h2>
 
     <div class="stats">
-      <div class="stat">
-        <div class="num" id="cTotal">—</div>
-        <div class="lbl">بطاقات</div>
-      </div>
-      <div class="stat">
-        <div class="num" id="cPeople">—</div>
-        <div class="lbl">إجمالي أشخاص</div>
-      </div>
-      <div class="stat">
-        <div class="num" id="cEntered" style="color:var(--green)">—</div>
-        <div class="lbl">دخلوا</div>
-      </div>
-      <div class="stat">
-        <div class="num" id="cRemain"  style="color:var(--red)">—</div>
-        <div class="lbl">لم يدخلوا</div>
-      </div>
+      <div class="stat"><div class="num" id="cTotal">—</div><div class="lbl">بطاقات</div></div>
+      <div class="stat"><div class="num" id="cPeople">—</div><div class="lbl">إجمالي أشخاص</div></div>
+      <div class="stat"><div class="num" id="cEntered" style="color:var(--green)">—</div><div class="lbl">دخلوا</div></div>
+      <div class="stat"><div class="num" id="cRemain"  style="color:var(--red)">—</div><div class="lbl">لم يدخلوا</div></div>
     </div>
 
-    <input type="text" id="searchInput" placeholder="🔍 بحث باسم الضيفة..." oninput="filterCards()" />
+    <input type="text" id="searchInput" placeholder="🔍 بحث باسم الضيفة..." oninput="filterCards()" style="margin-bottom:14px" />
 
     <div id="grid" class="grid">
       <div class="loading">جاري التحميل...</div>
@@ -282,75 +210,269 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  let allGuests = {}; // { id: { name, used, ... } }
-  let allCards  = []; // [{ id, el }]
+  let allCards = [];
 
-  // ── Settings ────────────────────────────────
+  // ── Settings ────────────────────────────────────────────────────────────────
   function loadSettings() {
     const u = localStorage.getItem('ghUser') || '';
     document.getElementById('githubUser').value = u;
     updateUrlPreview(u);
   }
-
   function saveSettings() {
     const u = document.getElementById('githubUser').value.trim();
     localStorage.setItem('ghUser', u);
     updateUrlPreview(u);
     toast('تم حفظ الإعدادات ✅');
   }
-
   function updateUrlPreview(u) {
-    document.getElementById('urlPreview').textContent =
-      u ? `رابط الفحص: https://${u}.github.io/wedding-qr/v.html?id=...`
-        : 'رابط الفحص سيكون: https://اسمك.github.io/wedding-qr/v.html?id=...';
+    document.getElementById('urlPreview').textContent = u
+      ? `رابط الفحص: https://${u}.github.io/wedding-qr/v.html?id=...`
+      : 'رابط الفحص سيكون: https://اسمك.github.io/wedding-qr/v.html?id=...';
   }
-
   function baseUrl() {
     const u = localStorage.getItem('ghUser') || '';
     return u ? `https://${u}.github.io/wedding-qr/v.html` : null;
   }
 
-  // ── QR Generation ───────────────────────────
+  // ── QR Code ────────────────────────────────────────────────────────────────
   function makeQR(text) {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       const div = document.createElement('div');
       div.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
       document.body.appendChild(div);
-      new QRCode(div, { text, width: 280, height: 280, correctLevel: QRCode.CorrectLevel.H });
+      new QRCode(div, { text, width: 400, height: 400, correctLevel: QRCode.CorrectLevel.H });
       setTimeout(() => {
         const canvas = div.querySelector('canvas');
         const dataUrl = canvas ? canvas.toDataURL('image/png') : '';
         document.body.removeChild(div);
         resolve(dataUrl);
-      }, 50);
+      }, 60);
     });
   }
 
-  // ── Add Guests ──────────────────────────────
+  // ── Template ────────────────────────────────────────────────────────────────
+  let tplMode = null;
+  let tplPos  = JSON.parse(localStorage.getItem('tplPos') || '{}');
+  // tplPos = { qr: {xPct,yPct,sizePct}, name: {xPct,yPct} }
+
+  function loadTemplate() {
+    const file = document.getElementById('templateFile').files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      localStorage.setItem('tplImage', e.target.result);
+      showTemplateEditor(e.target.result);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function showTemplateEditor(dataUrl) {
+    document.getElementById('templateEditor').style.display = 'block';
+    renderTplCanvas(dataUrl);
+    updatePosInfo();
+  }
+
+  function renderTplCanvas(dataUrl) {
+    const canvas = document.getElementById('templateCanvas');
+    const ctx    = canvas.getContext('2d');
+    const img    = new Image();
+    img.onload = () => {
+      // Scale to fit (max 500px wide)
+      const maxW  = Math.min(500, window.innerWidth - 80);
+      const scale = Math.min(1, maxW / img.naturalWidth);
+      canvas.width        = img.naturalWidth  * scale;
+      canvas.height       = img.naturalHeight * scale;
+      canvas._origW       = img.naturalWidth;
+      canvas._origH       = img.naturalHeight;
+      canvas._scale       = scale;
+      canvas._dataUrl     = dataUrl;
+      redrawTpl();
+    };
+    img.src = dataUrl;
+  }
+
+  function redrawTpl() {
+    const canvas = document.getElementById('templateCanvas');
+    if (!canvas._dataUrl) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    const img = new Image();
+    img.onload = () => {
+      ctx.clearRect(0, 0, W, H);
+      ctx.drawImage(img, 0, 0, W, H);
+
+      // Draw QR marker
+      if (tplPos.qr) {
+        const { xPct, yPct, sizePct } = tplPos.qr;
+        const x = W * xPct / 100, y = H * yPct / 100, s = W * sizePct / 100;
+        ctx.save();
+        ctx.strokeStyle = '#2ecc71'; ctx.lineWidth = 2; ctx.setLineDash([6,3]);
+        ctx.strokeRect(x, y, s, s);
+        ctx.fillStyle = 'rgba(46,204,113,0.12)'; ctx.fillRect(x, y, s, s);
+        ctx.restore();
+        ctx.fillStyle = '#2ecc71'; ctx.font = 'bold 13px Arial'; ctx.textAlign = 'right';
+        ctx.fillText('QR', x + s - 4, y + 16);
+      }
+
+      // Draw name marker
+      if (tplPos.name) {
+        const { xPct, yPct } = tplPos.name;
+        const x = W * xPct / 100, y = H * yPct / 100;
+        ctx.save();
+        ctx.strokeStyle = '#c06080'; ctx.lineWidth = 2; ctx.setLineDash([6,3]);
+        ctx.beginPath(); ctx.moveTo(x - 60, y); ctx.lineTo(x + 60, y); ctx.stroke();
+        ctx.restore();
+        ctx.fillStyle = '#c06080'; ctx.font = 'bold 13px Arial'; ctx.textAlign = 'center';
+        ctx.fillText('الاسم', x, y - 5);
+      }
+    };
+    img.src = canvas._dataUrl;
+  }
+
+  function setMode(mode) {
+    tplMode = mode;
+    document.getElementById('btnModeQR').classList.toggle('active',   mode === 'qr');
+    document.getElementById('btnModeName').classList.toggle('active', mode === 'name');
+    const hints = {
+      qr:   '📦 انقر على الزاوية العلوية اليسرى (أو اليمنى) لمنطقة QR Code',
+      name: '✏️ انقر على مركز خانة الاسم'
+    };
+    document.getElementById('modeHint').textContent = hints[mode];
+    document.getElementById('templateCanvas').style.cursor = 'crosshair';
+  }
+
+  document.addEventListener('click', e => {
+    const canvas = document.getElementById('templateCanvas');
+    if (e.target !== canvas || !tplMode) return;
+    const rect  = canvas.getBoundingClientRect();
+    const x     = e.clientX - rect.left;
+    const y     = e.clientY - rect.top;
+    const xPct  = (x / canvas.width)  * 100;
+    const yPct  = (y / canvas.height) * 100;
+
+    if (tplMode === 'qr') {
+      const sizePct = parseInt(document.getElementById('qrSizeSlider').value);
+      tplPos.qr = { xPct, yPct, sizePct };
+    } else {
+      tplPos.name = { xPct, yPct };
+    }
+
+    localStorage.setItem('tplPos', JSON.stringify(tplPos));
+    updatePosInfo();
+    redrawTpl();
+    tplMode = null;
+    document.getElementById('btnModeQR').classList.remove('active');
+    document.getElementById('btnModeName').classList.remove('active');
+    document.getElementById('modeHint').textContent = '✅ تم التحديد';
+    canvas.style.cursor = 'default';
+  });
+
+  function updateQrSize() {
+    const val = document.getElementById('qrSizeSlider').value;
+    document.getElementById('qrSizeVal').textContent = val;
+    if (tplPos.qr) {
+      tplPos.qr.sizePct = parseInt(val);
+      localStorage.setItem('tplPos', JSON.stringify(tplPos));
+      redrawTpl();
+    }
+  }
+
+  function updatePosInfo() {
+    document.getElementById('qrPosInfo').textContent   = tplPos.qr
+      ? `${tplPos.qr.xPct.toFixed(1)}%, ${tplPos.qr.yPct.toFixed(1)}% — حجم ${tplPos.qr.sizePct}%`
+      : 'انقر على الصورة';
+    document.getElementById('namePosInfo').textContent = tplPos.name
+      ? `${tplPos.name.xPct.toFixed(1)}%, ${tplPos.name.yPct.toFixed(1)}%`
+      : 'انقر على الصورة';
+  }
+
+  function clearTemplate() {
+    localStorage.removeItem('tplImage');
+    localStorage.removeItem('tplPos');
+    tplPos = {};
+    document.getElementById('templateEditor').style.display = 'none';
+    document.getElementById('templateFile').value = '';
+  }
+
+  async function previewCard() {
+    const tplDataUrl = localStorage.getItem('tplImage');
+    if (!tplDataUrl || !tplPos.qr) { alert('حدّدي موضع QR أولاً'); return; }
+    const dummyQR = await makeQR('https://example.com/test');
+    const composite = await buildComposite(tplDataUrl, dummyQR, 'أم سارة — معاينة', 4);
+    window.open(composite);
+  }
+
+  // ── Build composite image ────────────────────────────────────────────────
+  function buildComposite(tplDataUrl, qrDataUrl, guestName, count) {
+    return new Promise(resolve => {
+      if (!tplDataUrl || !tplPos.qr) { resolve(qrDataUrl); return; }
+
+      const canvas = document.createElement('canvas');
+      const ctx    = canvas.getContext('2d');
+      const tpl    = new Image();
+
+      tpl.onload = () => {
+        const W = tpl.naturalWidth, H = tpl.naturalHeight;
+        canvas.width = W; canvas.height = H;
+        ctx.drawImage(tpl, 0, 0);
+
+        const qr = new Image();
+        qr.onload = () => {
+          // Draw QR Code
+          const { xPct, yPct, sizePct } = tplPos.qr;
+          const qrX = W * xPct / 100;
+          const qrY = H * yPct / 100;
+          const qrS = W * sizePct / 100;
+          ctx.drawImage(qr, qrX, qrY, qrS, qrS);
+
+          // Count text below QR (inside template area)
+          if (count > 1) {
+            const fs = Math.round(W * 0.038);
+            ctx.font      = `bold ${fs}px 'Segoe UI', Arial`;
+            ctx.fillStyle = '#c06080';
+            ctx.textAlign = 'center';
+            ctx.fillText(`يشمل ${count} أشخاص`, qrX + qrS / 2, qrY + qrS + fs + 8);
+          }
+
+          // Draw name
+          if (tplPos.name) {
+            const nameX = W * tplPos.name.xPct / 100;
+            const nameY = H * tplPos.name.yPct / 100;
+            const fs2   = Math.round(W * 0.048);
+            ctx.font      = `bold ${fs2}px 'Segoe UI', Arial`;
+            ctx.fillStyle = '#2c2c2c';
+            ctx.textAlign = 'center';
+            ctx.fillText(guestName || '', nameX, nameY);
+          }
+
+          resolve(canvas.toDataURL('image/png'));
+        };
+        qr.src = qrDataUrl;
+      };
+      tpl.src = tplDataUrl;
+    });
+  }
+
+  // ── Add Guests ────────────────────────────────────────────────────────────
   async function generateGuests() {
     const base = baseUrl();
     if (!base) { alert('الرجاء حفظ اسم مستخدم GitHub أولاً'); return; }
-
     const raw = document.getElementById('namesInput').value.trim();
     if (!raw)  { alert('الرجاء إدخال البيانات'); return; }
 
-    // Parse lines: "الاسم | عدد" or just "الاسم"
-    const entries = raw.split('\n')
-      .map(l => l.trim()).filter(Boolean)
-      .map(l => {
-        const parts = l.split('|');
-        const name  = parts[0].trim() || 'ضيف';
-        const count = parseInt(parts[1]) || 1;
-        return { name, count };
-      });
+    const entries = raw.split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+      const parts = l.split('|');
+      const name  = parts[0].trim() || 'ضيف';
+      const count = parseInt(parts[1]) || 1;
+      return { name, count };
+    });
 
     const totalPeople = entries.reduce((s, e) => s + e.count, 0);
     if (!confirm(`إضافة ${entries.length} بطاقة لـ ${totalPeople} شخص؟`)) return;
 
     document.getElementById('progress').style.display = 'block';
-
-    const updates = {};
-    const now = Date.now();
+    const updates = {}, now = Date.now();
     entries.forEach(({ name, count }) => {
       const id = crypto.randomUUID();
       updates[`guests/${id}`] = { name, count, used: false, createdAt: now };
@@ -362,48 +484,52 @@
     toast(`تم إضافة ${entries.length} بطاقة (${totalPeople} شخص) 🎉`);
   }
 
-  // ── Render one card ──────────────────────────
+  // ── Build card ────────────────────────────────────────────────────────────
   async function buildCard(id, guest) {
-    const base  = baseUrl() || location.origin + location.pathname.replace('index.html','') + 'v.html';
+    const base  = baseUrl() || (location.origin + location.pathname.replace('index.html','') + 'v.html');
     const url   = `${base}?id=${id}`;
-    const qrUrl = await makeQR(url);
+    const count = guest.count || 1;
+    const name  = guest.name  || '(بدون اسم)';
+
+    const qrUrl    = await makeQR(url);
+    const tplImage = localStorage.getItem('tplImage');
+    const imgUrl   = tplImage ? await buildComposite(tplImage, qrUrl, name, count) : qrUrl;
 
     const div = document.createElement('div');
     div.className = 'g-card';
-    const count = guest.count || 1;
-    div.dataset.name = guest.name;
+    div.dataset.name = name;
     div.innerHTML = `
-      <div class="g-name">${guest.name}</div>
-      <div style="font-size:13px;color:#888;margin-bottom:8px">👥 ${count} ${count === 1 ? 'شخص' : 'أشخاص'}</div>
-      <img src="${qrUrl}" alt="QR" />
+      <div class="g-name">${name}</div>
+      <div class="g-count">👥 ${count} ${count === 1 ? 'شخص' : 'أشخاص'}</div>
+      <img src="${imgUrl}" alt="بطاقة" />
       <div>
         <span class="badge ${guest.used ? 'entered' : 'waiting'}">
           ${guest.used ? `✅ دخلوا (${count})` : '⏳ لم يدخلوا'}
         </span>
       </div>
       <div class="actions">
-        <a href="${qrUrl}" download="${guest.name}.png">تحميل</a>
-        <button class="btn-danger btn-sm" onclick="deleteGuest('${id}', this)">حذف</button>
+        <a href="${imgUrl}" download="${name}.png">⬇️ تحميل</a>
+        <button class="btn-danger btn-sm" onclick="deleteGuest('${id}')">حذف</button>
       </div>`;
     return div;
   }
 
-  // ── Delete guest ─────────────────────────────
-  async function deleteGuest(id, btn) {
-    if (!confirm('حذف هذه المدعوة؟')) return;
+  async function deleteGuest(id) {
+    if (!confirm('حذف هذه البطاقة؟')) return;
     await db.ref('guests/' + id).remove();
     toast('تم الحذف');
   }
 
-  // ── Load & listen ────────────────────────────
+  // ── Load guests ────────────────────────────────────────────────────────────
   function loadGuests() {
     db.ref('guests').on('value', async snap => {
-      allGuests = snap.val() || {};
-      const entries = Object.entries(allGuests);
+      const guests  = snap.val() || {};
+      const entries = Object.entries(guests);
 
       const total        = entries.length;
       const totalPeople  = entries.reduce((s,[,g]) => s + (g.count||1), 0);
       const enteredPeople= entries.filter(([,g])=>g.used).reduce((s,[,g])=>s+(g.count||1),0);
+
       document.getElementById('cTotal').textContent   = total;
       document.getElementById('cPeople').textContent  = totalPeople;
       document.getElementById('cEntered').textContent = enteredPeople;
@@ -414,43 +540,42 @@
       allCards = [];
 
       if (total === 0) {
-        grid.innerHTML = '<div class="empty">لا توجد مدعوات بعد</div>';
+        grid.innerHTML = '<div class="empty">لا توجد بطاقات بعد</div>';
         return;
       }
 
-      // Generate QR codes in parallel (batches of 20 for smooth rendering)
-      const batchSize = 20;
+      const batchSize = 10;
       for (let i = 0; i < entries.length; i += batchSize) {
         const batch = entries.slice(i, i + batchSize);
         const cards = await Promise.all(batch.map(([id, g]) => buildCard(id, g)));
-        cards.forEach(el => {
-          grid.appendChild(el);
-          allCards.push({ name: el.dataset.name, el });
-        });
+        cards.forEach(el => { grid.appendChild(el); allCards.push({ name: el.dataset.name, el }); });
       }
     });
   }
 
-  // ── Search ───────────────────────────────────
   function filterCards() {
     const q = document.getElementById('searchInput').value.trim().toLowerCase();
-    allCards.forEach(({ name, el }) => {
-      el.style.display = (!q || name.includes(q)) ? '' : 'none';
-    });
+    allCards.forEach(({ name, el }) => { el.style.display = (!q || name.includes(q)) ? '' : 'none'; });
   }
 
-  // ── Toast ────────────────────────────────────
   function toast(msg) {
     const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.style.display = 'block';
+    t.textContent = msg; t.style.display = 'block';
     clearTimeout(toast._t);
     toast._t = setTimeout(() => t.style.display = 'none', 3000);
   }
 
-  // ── Init ─────────────────────────────────────
+  // ── Init ──────────────────────────────────────────────────────────────────
   loadSettings();
   loadGuests();
+
+  // Restore template if saved
+  const savedTpl = localStorage.getItem('tplImage');
+  if (savedTpl) showTemplateEditor(savedTpl);
+  if (tplPos.qr) {
+    document.getElementById('qrSizeSlider').value    = tplPos.qr.sizePct;
+    document.getElementById('qrSizeVal').textContent = tplPos.qr.sizePct;
+  }
 </script>
 
 </body>
