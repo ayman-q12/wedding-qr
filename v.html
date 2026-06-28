@@ -93,7 +93,11 @@
 
           if (committed) {
             // أول مرة تُسجَّل
-            show('allowed', '✅', guest.name, 'أهلاً وسهلاً بك 🌸');
+            const count = guest.count || 1;
+            const msg   = count > 1
+              ? `أهلاً وسهلاً بكم 🌸<br><span style="font-size:22px">بطاقة دخول ${count} أشخاص</span>`
+              : 'أهلاً وسهلاً بك 🌸';
+            show('allowed', '✅', guest.name || 'ضيف', msg);
           } else {
             // مستخدمة من قبل
             const t = new Date(guest.usedAt).toLocaleTimeString('ar-SA');

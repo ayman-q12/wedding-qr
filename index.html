@@ -234,9 +234,9 @@
   <!-- Add Guests -->
   <div class="box">
     <h2>➕ إضافة مدعوات</h2>
-    <label>أدخلي الأسماء — سطر لكل اسم</label>
-    <textarea id="namesInput" placeholder="أسماء محمد&#10;نورة أحمد&#10;سارة علي&#10;..."></textarea>
-    <p class="hint">يمكنك لصق كل الأسماء دفعة واحدة (300 اسم أو أكثر)</p>
+    <label>أدخلي الأسماء وعدد الأشخاص — سطر لكل بطاقة</label>
+    <textarea id="namesInput" placeholder="أم سارة | 4&#10;نورة أحمد | 2&#10;سارة علي | 1&#10;&#10;(اكتبي الاسم ثم | ثم عدد الأشخاص)&#10;(إذا ما كتبتِ العدد يُحسب شخص واحد)"></textarea>
+    <p class="hint">مثال: &nbsp; أم سارة | 4 &nbsp;←&nbsp; تدخل هي و3 بناتها بنفس الكود</p>
     <div id="progress">⏳ جاري توليد الأكواد...</div>
     <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
       <button class="btn-primary" onclick="generateGuests()">🪄 توليد QR Codes</button>
@@ -251,15 +251,19 @@
     <div class="stats">
       <div class="stat">
         <div class="num" id="cTotal">—</div>
-        <div class="lbl">إجمالي</div>
+        <div class="lbl">بطاقات</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="cPeople">—</div>
+        <div class="lbl">إجمالي أشخاص</div>
       </div>
       <div class="stat">
         <div class="num" id="cEntered" style="color:var(--green)">—</div>
-        <div class="lbl">دخلت</div>
+        <div class="lbl">دخلوا</div>
       </div>
       <div class="stat">
         <div class="num" id="cRemain"  style="color:var(--red)">—</div>
-        <div class="lbl">لم تدخل</div>
+        <div class="lbl">لم يدخلوا</div>
       </div>
     </div>
 
@@ -328,27 +332,34 @@
     if (!base) { alert('الرجاء حفظ اسم مستخدم GitHub أولاً'); return; }
 
     const raw = document.getElementById('namesInput').value.trim();
-    if (!raw)  { alert('الرجاء إدخال الأسماء'); return; }
+    if (!raw)  { alert('الرجاء إدخال البيانات'); return; }
 
-    const names = [...new Set(
-      raw.split('\n').map(n => n.trim()).filter(Boolean)
-    )];
+    // Parse lines: "الاسم | عدد" or just "الاسم"
+    const entries = raw.split('\n')
+      .map(l => l.trim()).filter(Boolean)
+      .map(l => {
+        const parts = l.split('|');
+        const name  = parts[0].trim() || 'ضيف';
+        const count = parseInt(parts[1]) || 1;
+        return { name, count };
+      });
 
-    if (!confirm(`هل تريدين إضافة ${names.length} مدعوة؟`)) return;
+    const totalPeople = entries.reduce((s, e) => s + e.count, 0);
+    if (!confirm(`إضافة ${entries.length} بطاقة لـ ${totalPeople} شخص؟`)) return;
 
     document.getElementById('progress').style.display = 'block';
 
     const updates = {};
     const now = Date.now();
-    names.forEach(name => {
+    entries.forEach(({ name, count }) => {
       const id = crypto.randomUUID();
-      updates[`guests/${id}`] = { name, used: false, createdAt: now };
+      updates[`guests/${id}`] = { name, count, used: false, createdAt: now };
     });
 
     await db.ref().update(updates);
     document.getElementById('namesInput').value = '';
     document.getElementById('progress').style.display = 'none';
-    toast(`تم إضافة ${names.length} مدعوة بنجاح 🎉`);
+    toast(`تم إضافة ${entries.length} بطاقة (${totalPeople} شخص) 🎉`);
   }
 
   // ── Render one card ──────────────────────────
@@ -359,13 +370,15 @@
 
     const div = document.createElement('div');
     div.className = 'g-card';
+    const count = guest.count || 1;
     div.dataset.name = guest.name;
     div.innerHTML = `
       <div class="g-name">${guest.name}</div>
+      <div style="font-size:13px;color:#888;margin-bottom:8px">👥 ${count} ${count === 1 ? 'شخص' : 'أشخاص'}</div>
       <img src="${qrUrl}" alt="QR" />
       <div>
         <span class="badge ${guest.used ? 'entered' : 'waiting'}">
-          ${guest.used ? '✅ دخلت' : '⏳ لم تدخل'}
+          ${guest.used ? `✅ دخلوا (${count})` : '⏳ لم يدخلوا'}
         </span>
       </div>
       <div class="actions">
@@ -388,11 +401,13 @@
       allGuests = snap.val() || {};
       const entries = Object.entries(allGuests);
 
-      const total   = entries.length;
-      const entered = entries.filter(([,g]) => g.used).length;
+      const total        = entries.length;
+      const totalPeople  = entries.reduce((s,[,g]) => s + (g.count||1), 0);
+      const enteredPeople= entries.filter(([,g])=>g.used).reduce((s,[,g])=>s+(g.count||1),0);
       document.getElementById('cTotal').textContent   = total;
-      document.getElementById('cEntered').textContent = entered;
-      document.getElementById('cRemain').textContent  = total - entered;
+      document.getElementById('cPeople').textContent  = totalPeople;
+      document.getElementById('cEntered').textContent = enteredPeople;
+      document.getElementById('cRemain').textContent  = totalPeople - enteredPeople;
 
       const grid = document.getElementById('grid');
       grid.innerHTML = '';
