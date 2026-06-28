@@ -168,6 +168,16 @@
         <label>حجم QR: <b id="qrSizeVal">60</b>%</label>
         <input type="range" id="qrSizeSlider" min="15" max="90" value="60" oninput="updateQrSize()" />
       </div>
+
+      <!-- Preview modal -->
+      <div id="previewModal" style="display:none;margin-top:14px;text-align:center">
+        <p style="font-size:13px;color:#666;margin-bottom:8px">👇 معاينة البطاقة</p>
+        <img id="previewImg" style="max-width:100%;border-radius:10px;border:1px solid var(--border)" />
+        <div style="margin-top:10px">
+          <a id="previewDl" href="#" download="معاينة.png" class="btn-primary" style="display:inline-block;padding:8px 18px;color:#fff;background:var(--brown);border-radius:8px;text-decoration:none;font-size:13px">⬇️ تحميل المعاينة</a>
+          <button onclick="document.getElementById('previewModal').style.display='none'" class="btn-sm" style="margin-right:8px;background:#eee;color:#333">✕ إغلاق</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -426,14 +436,13 @@
           const qrS = W * sizePct / 100;
           ctx.drawImage(qr, qrX, qrY, qrS, qrS);
 
-          // Count text below QR (inside template area)
-          if (count > 1) {
-            const fs = Math.round(W * 0.038);
-            ctx.font      = `bold ${fs}px 'Segoe UI', Arial`;
-            ctx.fillStyle = '#c06080';
-            ctx.textAlign = 'center';
-            ctx.fillText(`يشمل ${count} أشخاص`, qrX + qrS / 2, qrY + qrS + fs + 8);
-          }
+          // Count text below QR
+          const fs = Math.round(W * 0.038);
+          const countText = count === 1 ? 'بطاقة دخول شخص واحد' : `بطاقة دخول ${count} أشخاص`;
+          ctx.font      = `bold ${fs}px 'Segoe UI', Arial`;
+          ctx.fillStyle = '#c06080';
+          ctx.textAlign = 'center';
+          ctx.fillText(countText, qrX + qrS / 2, qrY + qrS + fs + 8);
 
           // Draw name
           if (tplPos.name) {
