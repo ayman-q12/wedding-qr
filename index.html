@@ -101,6 +101,26 @@
       background:#2ecc71; color:#fff; padding:12px 24px; border-radius:10px;
       font-size:14px; display:none; z-index:999; white-space:nowrap;
     }
+
+    /* Lock screen */
+    #lockScreen {
+      position:fixed; inset:0; background:linear-gradient(135deg,#1a0a00,#3b1a08);
+      z-index:9999; display:flex; align-items:center; justify-content:center;
+    }
+    .lock-card {
+      background:#fff; border-radius:24px; padding:44px 32px;
+      text-align:center; width:90%; max-width:360px; box-shadow:0 20px 60px rgba(0,0,0,.4);
+    }
+    .lock-card .lock-icon { font-size:56px; margin-bottom:14px; }
+    .lock-card h2 { color:var(--brown); font-size:20px; margin-bottom:6px; }
+    .lock-card p  { font-size:13px; color:#888; margin-bottom:20px; }
+    .lock-card input {
+      width:100%; padding:12px 16px; border:1px solid var(--border);
+      border-radius:10px; font-size:18px; text-align:center; letter-spacing:4px;
+      margin-bottom:12px; direction:ltr;
+    }
+    .lock-card button { width:100%; padding:12px; font-size:16px; }
+    #lockError { color:var(--red); font-size:13px; margin-top:8px; display:none; }
     #progress { display:none; background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:10px 14px; font-size:13px; margin-top:10px; color:#856404; }
 
     @media print {
@@ -117,12 +137,27 @@
 </head>
 <body>
 
+<!-- Lock Screen -->
+<div id="lockScreen" style="display:none">
+  <div class="lock-card">
+    <div class="lock-icon">🔒</div>
+    <h2>صفحة المنظمين</h2>
+    <p>هذه الصفحة مخصصة للمنظمين فقط</p>
+    <input type="password" id="pinInput" placeholder="••••••" onkeydown="if(event.key==='Enter')checkPin()" />
+    <button class="btn-primary" onclick="checkPin()">دخول</button>
+    <div id="lockError">كلمة مرور خاطئة ❌</div>
+  </div>
+</div>
+
 <header>
   <div>
     <h1>🌸 إدارة دعوات الزواج</h1>
     <p>لوحة تحكم المنظمين — قسم النساء</p>
   </div>
-  <a href="dashboard.html">📊 لوحة الحضور</a>
+  <div style="display:flex;gap:10px;align-items:center">
+    <a href="dashboard.html">📊 لوحة الحضور</a>
+    <button onclick="logout()" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.4);padding:6px 14px;font-size:13px;border-radius:8px">خروج 🔓</button>
+  </div>
 </header>
 
 <div class="wrap">
@@ -138,6 +173,14 @@
       <button class="btn-primary" onclick="saveSettings()">حفظ</button>
     </div>
     <p class="hint" id="urlPreview">رابط الفحص سيكون: https://اسمك.github.io/wedding-qr/v.html?id=...</p>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+      <label>كلمة مرور الإدارة</label>
+      <div class="row">
+        <input type="password" id="newPin" placeholder="اكتب كلمة مرور جديدة" />
+        <button class="btn-primary" onclick="setPin()">حفظ</button>
+      </div>
+      <p class="hint">أي شخص يفتح الموقع يحتاج يدخلها أولاً</p>
+    </div>
   </div>
 
   <!-- Template -->
@@ -221,6 +264,44 @@
   const db = firebase.database();
 
   let allCards = [];
+
+  // ── Auth ─────────────────────────────────────────────────────────────────────
+  async function initAuth() {
+    const snap = await db.ref('config/adminPin').once('value');
+    const pin  = snap.val();
+    if (!pin) return; // لا يوجد كلمة مرور بعد، السماح بالدخول
+    if (sessionStorage.getItem('adminAuth') === pin) return; // مسجّل دخول
+    // أظهر شاشة القفل
+    document.getElementById('lockScreen').style.display = 'flex';
+  }
+
+  async function checkPin() {
+    const input = document.getElementById('pinInput').value;
+    const snap  = await db.ref('config/adminPin').once('value');
+    const pin   = snap.val();
+    if (input === pin) {
+      sessionStorage.setItem('adminAuth', pin);
+      document.getElementById('lockScreen').style.display = 'none';
+      document.getElementById('pinInput').value = '';
+    } else {
+      document.getElementById('lockError').style.display = 'block';
+      setTimeout(() => document.getElementById('lockError').style.display = 'none', 2000);
+    }
+  }
+
+  async function setPin() {
+    const pwd = document.getElementById('newPin').value.trim();
+    if (!pwd) { alert('اكتب كلمة مرور أولاً'); return; }
+    await db.ref('config/adminPin').set(pwd);
+    sessionStorage.setItem('adminAuth', pwd);
+    document.getElementById('newPin').value = '';
+    toast('✅ تم حفظ كلمة المرور');
+  }
+
+  function logout() {
+    sessionStorage.removeItem('adminAuth');
+    location.reload();
+  }
 
   // ── Settings ────────────────────────────────────────────────────────────────
   function loadSettings() {
@@ -590,6 +671,7 @@
   }
 
   // ── Init ──────────────────────────────────────────────────────────────────
+  initAuth();
   loadSettings();
   loadGuests();
 
