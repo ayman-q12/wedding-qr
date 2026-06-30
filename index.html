@@ -212,6 +212,22 @@
         <input type="range" id="qrSizeSlider" min="15" max="90" value="60" oninput="updateQrSize()" />
       </div>
 
+      <!-- Colors -->
+      <div style="display:flex;gap:14px;margin-top:12px;flex-wrap:wrap;align-items:center">
+        <div style="display:flex;align-items:center;gap:6px">
+          <label style="margin:0;font-size:12px">🎨 لون QR</label>
+          <input type="color" id="colorQrDark"  value="#c07085" oninput="saveColors()" title="لون مربعات QR" />
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <label style="margin:0;font-size:12px">◻️ خلفية QR</label>
+          <input type="color" id="colorQrLight" value="#f8f0ec" oninput="saveColors()" title="خلفية QR Code" />
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <label style="margin:0;font-size:12px">✍️ لون النص</label>
+          <input type="color" id="colorText"    value="#c07085" oninput="saveColors()" title="لون الاسم والعدد" />
+        </div>
+      </div>
+
       <!-- Preview modal -->
       <div id="previewModal" style="display:none;margin-top:14px;text-align:center">
         <p style="font-size:13px;color:#666;margin-bottom:8px">👇 معاينة البطاقة</p>
@@ -325,13 +341,42 @@
     return u ? `https://${u}.github.io/wedding-qr/v.html` : null;
   }
 
+  // ── Colors ─────────────────────────────────────────────────────────────────
+  function getColors() {
+    return {
+      qrDark:  document.getElementById('colorQrDark')?.value  || '#c07085',
+      qrLight: document.getElementById('colorQrLight')?.value || '#f8f0ec',
+      text:    document.getElementById('colorText')?.value    || '#c07085'
+    };
+  }
+
+  function saveColors() {
+    const c = getColors();
+    db.ref('config/colors').set(c);
+  }
+
+  function applyColors(c) {
+    if (!c) return;
+    const f = id => document.getElementById(id);
+    if (f('colorQrDark'))  f('colorQrDark').value  = c.qrDark  || '#c07085';
+    if (f('colorQrLight')) f('colorQrLight').value = c.qrLight || '#f8f0ec';
+    if (f('colorText'))    f('colorText').value    = c.text    || '#c07085';
+  }
+
   // ── QR Code ────────────────────────────────────────────────────────────────
   function makeQR(text) {
+    const c = getColors();
     return new Promise(resolve => {
       const div = document.createElement('div');
       div.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
       document.body.appendChild(div);
-      new QRCode(div, { text, width: 400, height: 400, correctLevel: QRCode.CorrectLevel.H });
+      new QRCode(div, {
+        text,
+        width: 400, height: 400,
+        colorDark:  c.qrDark,
+        colorLight: c.qrLight,
+        correctLevel: QRCode.CorrectLevel.H
+      });
       setTimeout(() => {
         const canvas = div.querySelector('canvas');
         const dataUrl = canvas ? canvas.toDataURL('image/png') : '';
@@ -530,21 +575,23 @@
           const qrS = W * sizePct / 100;
           ctx.drawImage(qr, qrX, qrY, qrS, qrS);
 
-          // Count text below QR
-          const fs = Math.round(W * 0.038);
-          const countText = count === 1 ? 'بطاقة دخول شخص واحد' : `بطاقة دخول ${count} أشخاص`;
-          ctx.font      = `bold ${fs}px 'Segoe UI', Arial`;
-          ctx.fillStyle = '#c06080';
-          ctx.textAlign = 'center';
-          ctx.fillText(countText, qrX + qrS / 2, qrY + qrS + fs + 8);
+          const colors = getColors();
 
-          // Draw name
+          // Count text — حجمه يتناسب مع الكود (6% من عرض الكود)
+          const countFs   = Math.max(18, Math.round(qrS * 0.09));
+          const countText = count === 1 ? 'بطاقة دخول شخص واحد' : `بطاقة دخول ${count} أشخاص`;
+          ctx.font      = `bold ${countFs}px 'Segoe UI', Arial`;
+          ctx.fillStyle = colors.text;
+          ctx.textAlign = 'center';
+          ctx.fillText(countText, qrX + qrS / 2, qrY + qrS + countFs + 6);
+
+          // Draw name — حجمه يتناسب مع الكود (11% من عرض الكود)
           if (tplPos.name) {
-            const nameX = W * tplPos.name.xPct / 100;
-            const nameY = H * tplPos.name.yPct / 100;
-            const fs2   = Math.round(W * 0.048);
-            ctx.font      = `bold ${fs2}px 'Segoe UI', Arial`;
-            ctx.fillStyle = '#f998b6';
+            const nameX  = W * tplPos.name.xPct / 100;
+            const nameY  = H * tplPos.name.yPct / 100;
+            const nameFs = Math.max(22, Math.round(qrS * 0.115));
+            ctx.font      = `bold ${nameFs}px 'Segoe UI', Arial`;
+            ctx.fillStyle = colors.text;
             ctx.textAlign = 'center';
             ctx.fillText(guestName || '', nameX, nameY);
           }
@@ -695,14 +742,16 @@
   loadSettings();
 
   async function init() {
-    // ① جلب القالب والمواضع أولاً قبل بناء الكروت
-    const [imgSnap, posSnap] = await Promise.all([
+    // ① جلب القالب والمواضع والألوان أولاً قبل بناء الكروت
+    const [imgSnap, posSnap, colSnap] = await Promise.all([
       db.ref('config/tplImage').once('value'),
-      db.ref('config/tplPos').once('value')
+      db.ref('config/tplPos').once('value'),
+      db.ref('config/colors').once('value')
     ]);
     tplImageDataUrl = imgSnap.val() || null;
     const remotePos = posSnap.val();
     if (remotePos) tplPos = remotePos;
+    applyColors(colSnap.val());
 
     if (tplImageDataUrl) {
       showTemplateEditor(tplImageDataUrl);
