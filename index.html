@@ -658,7 +658,8 @@
         </span>
       </div>
       <div class="actions">
-        <button class="btn-sm" style="background:var(--brown);color:#fff" onclick="shareCard('${imgUrl}','${name}')">⬇️ تحميل / مشاركة</button>
+        <button class="btn-sm" style="background:var(--brown);color:#fff"   onclick="downloadCard('${imgUrl}','${name}')">⬇️ تحميل</button>
+        <button class="btn-sm" style="background:#25d366;color:#fff" onclick="shareCard('${imgUrl}','${name}')">↗️ مشاركة</button>
         <button class="btn-danger btn-sm" onclick="deleteGuest('${id}')">حذف</button>
       </div>`;
     return div;
@@ -704,8 +705,16 @@
   }
 
   // ── Download / Share ────────────────────────────────────────────────────────
+  function downloadCard(dataUrl, name) {
+    const a = document.createElement('a');
+    a.href     = dataUrl;
+    a.download = `${name}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
   async function shareCard(dataUrl, name) {
-    // جرب Web Share API أولاً (جوال iOS/Android)
     if (navigator.share) {
       try {
         const blob = await (await fetch(dataUrl)).blob();
@@ -714,15 +723,10 @@
           await navigator.share({ files: [file], title: `بطاقة دعوة - ${name}` });
           return;
         }
-      } catch (e) { /* إذا رفض المستخدم أو فشل، نكمل للـ fallback */ }
+      } catch (e) {}
     }
-    // Fallback: تحميل مباشر (كمبيوتر)
-    const a = document.createElement('a');
-    a.href     = dataUrl;
-    a.download = `${name}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    // Fallback إذا ما دعم المتصفح المشاركة
+    toast('المشاركة غير مدعومة على هذا المتصفح — استخدم زر التحميل');
   }
 
   function filterCards() {
