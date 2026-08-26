@@ -707,8 +707,6 @@
 
   async function generateGuests() {
     if (pendingGuests.length === 0) { alert('أضيفي مدعوة واحدة على الأقل'); return; }
-    const base = baseUrl();
-    if (!base) { alert('الرجاء حفظ اسم مستخدم GitHub أولاً'); return; }
     const total = pendingGuests.reduce((s, g) => s + g.count, 0);
     if (!confirm(`إضافة ${pendingGuests.length} بطاقة لـ ${total} شخص؟`)) return;
 
